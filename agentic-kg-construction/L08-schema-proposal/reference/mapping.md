@@ -5,3 +5,4 @@
 - Because you own the stop test, the fixes carry over as they are: exact-match verdict, empty or missing verdict is "not
   approved", a returned outcome (`converged` True/False) the caller must handle, feedback cleared at the start of a run.
 - Proposer and critic as two subagents is an idea only; no SDK call was made for this card (I-005 covers the L06 gate only).
+- Round 11: the SDK mapping was still not run (the D4 run budget went to the L07 Read question); this file stays an idea.

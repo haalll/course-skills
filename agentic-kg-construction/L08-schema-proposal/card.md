@@ -2,7 +2,7 @@
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 8 of 12
 topic: schema proposal for structured data: a proposer/critic refinement loop (LoopAgent) with an escalation checker
 card_version: 2 (desktop draft v1 from the lesson transcript, checked and corrected in the lab, round 10)
-status: DRAFT, awaiting review on branch draft/r9
+status: DRAFT, merged to main in round 11; live notes added on branch draft/r10
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: "scripted fake models only, no live model (lab/stage1/tests/l08_loop.py, l08_reference_check.py, round 10)"
@@ -36,7 +36,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 - Do make the stop test exact (the critic's whole reply is one token), not a substring.
 - Do fail closed: an empty or missing verdict is "not approved".
 - Do bound every loop and make "did not converge" a state the caller must handle (a human decides).
-- Do key plan entries by name; refuse a duplicate label from a second source file with a corrective error, allow a revision from the same file.
+- Do key plan entries by name; refuse a duplicate label from a second source file with a corrective error, allow a revision from the same file [run: same file again returns success and keeps the entry; other file errors, lab/stage1/tests/out_l08_revision.txt, which re-states the guard's logic rather than importing it].
 - Do reset feedback (and counters) when a new run starts.
 - Do give the checker's last event a text, so a coordinator that runs the loop as a tool gets something other than `''`.
 - Don't test `"valid" in text`: it also matches "invalid".
@@ -55,8 +55,13 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 
 Also seen: every early `escalate` printed an OpenTelemetry "Failed to detach context" traceback on stderr (13 such messages in one run of l08_loop.py, 4 in l08_reference_check.py, whose 4 approving runs stop early; the results were unaffected; cause not investigated).
 
+## Live notes (round 11: reference loop, real Sonnet as proposer AND critic through ADK 1.5.0, n=3, lab/stage1/live/out_l08-*.txt)
+- The critic's reply was exactly `valid` (5 characters, nothing else) in 3 of 3 runs, so the exact-match checker approved at iteration 1 each time. No chatty or punctuated approval, no `revise:` reply was seen; the cost of a chatty approval (extra iterations) was therefore not observed.
+- Run l08-2 (two files, both told to use label `Person`): the proposer put both calls in ONE response, the second was refused as a duplicate, and ADK kept only that last (refused) call's writes, so NO plan was stored (final state has no `nodes`). The proposer's text said "only half went through"; the critic still replied `valid` and the checker wrote `converged=True`. This is gotcha d meeting gotcha e: `converged=True` does not mean a plan exists. Make the checker also require a non-empty plan in state.
+- The checker's text event never reached a later pass (all three runs ended at iteration 1), so its effect on a real model's history is still unmeasured. Cost of the 3 runs about $0.025.
+
 ## Residual risks, not tested
-- A real critic model: whether it answers exactly `valid`, adds punctuation or explanation, or approves too easily. A fail-closed checker turns a chatty approval into a non-approval; that costs iterations, not safety.
+- A real critic model on harder plans: only three easy prompts were run and all approvals were exact `valid`. A fail-closed checker turns a chatty approval into a non-approval; that costs iterations, not safety.
 - A refused duplicate does not make the plan right: the proposer must react to the error (in the check, the converged plan lacked the second file's rule).
 - The checker's text event enters the other agents' history on the next pass; its effect on a real model was not measured.
 - The lesson's own code and notebook were not read.
