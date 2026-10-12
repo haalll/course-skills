@@ -1,7 +1,7 @@
 ---
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 8 of 12
 topic: schema proposal for structured data: a proposer/critic refinement loop (LoopAgent) with an escalation checker
-card_version: 4 (round 15: checker also requires the caller's expected files all planned, build_loop(expected_files=...); tests lab/stage1/r15/l15_complete.py. v3: stored plan, r12)
+card_version: 5 (round 17: checker also fails a plan that cites a file outside the caller's expected set, tests lab/stage1/r17/l17_extra.py; v4, round 15: checker also requires the caller's expected files all planned, build_loop(expected_files=...); tests lab/stage1/r15/l15_complete.py. v3: stored plan, r12)
 status: DRAFT; v3 on main; v4 (completeness) on branch draft/r15
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
@@ -65,7 +65,7 @@ Also seen: every early `escalate` printed an OpenTelemetry "Failed to detach con
 - A real critic model on harder plans: only three easy prompts were run and all approvals were exact `valid`. A fail-closed checker turns a chatty approval into a non-approval; that costs iterations, not safety.
 - A refused duplicate does not make the plan right: the proposer must react to the error (in the check, the converged plan lacked the second file's rule).
 - The checker's text event enters the other agents' history on the next pass (scripted replay, r15, lab/stage1/r15/out_l15_textevent.txt: the proposer's next request carries `[checker] said: NOT_CONVERGED ... plan leaves ['parts.csv'] unplanned`; without the event it carries only `[critic] said: valid`). How a real model reacts to that text was not measured.
-- Completeness (v4): the expected set comes from the caller, `build_loop(..., expected_files=...)` is required and refuses an empty set; the checker names the unplanned files in its text. Before/after on fake models: lab/stage1/r15/out_l15_complete.txt (before: `valid` with parts.csv unplanned converged; after: not converged, completed in pass 2 converges). Not covered: a file that is planned wrongly (right file, wrong label) is still the critic's job. The same shape (caller-owned expected ids, one whole-plan tool call) was used on real records in N25 (lab/n25/n25_loop.py).
+- Completeness (v4): the expected set comes from the caller, `build_loop(..., expected_files=...)` is required and refuses an empty set; the checker names the unplanned files in its text. Before/after on fake models: lab/stage1/r15/out_l15_complete.txt (before: `valid` with parts.csv unplanned converged; after: not converged, completed in pass 2 converges). Unexpected files (v5): a stored node rule citing a file outside `expected_files` also stops convergence and is named in the checker text; before/after on fake models: lab/stage1/r17/out_l17_before.txt, out_l17_after.txt. Not covered: a file that is planned wrongly (right file, wrong label) is still the critic's job. The same shape (caller-owned expected ids, one whole-plan tool call) was used on real records in N25 (lab/n25/n25_loop.py).
 - The lesson's own code and notebook were not read.
 
 ## Mapping to the Claude Agent SDK (DEC-001)

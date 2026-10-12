@@ -19,7 +19,7 @@ def propose_node(label: str, source_file: str, tool_context: ToolContext) -> dic
     return {"status": "success"}
 
 class Checker(BaseAgent):
-    """Escalate only on an exact approval AND a stored plan that covers every expected source file (the caller's set, not the model's);
+    """Escalate only on an exact approval AND a stored plan that covers every expected source file and cites no other (the caller's set, not the model's);
     record the outcome in state and in a text event (so a tool caller sees it)."""
     expected_files: frozenset
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
@@ -30,8 +30,9 @@ class Checker(BaseAgent):
         saved = await ctx.session_service.get_session(app_name=ctx.session.app_name, user_id=ctx.session.user_id, session_id=ctx.session.id)
         nodes = (saved.state.get("nodes") if saved else None) or {}
         missing = sorted(self.expected_files - set(nodes.values()))   # completeness: a plan that exists can still leave a file unplanned (T-037)
-        ok = approved and bool(nodes) and not missing
-        why = "no plan is stored" if not nodes else f"plan leaves {missing} unplanned"
+        extra = sorted(set(nodes.values()) - self.expected_files)   # the other direction: a node rule citing a file the caller never listed (r17)
+        ok = approved and bool(nodes) and not missing and not extra
+        why = "no plan is stored" if not nodes else (f"plan leaves {missing} unplanned" if missing else f"plan cites unexpected files {extra}")
         text = "APPROVED" if ok else (f"NOT_CONVERGED after {n} round(s): critic approved but {why}" if approved else f"NOT_CONVERGED after {n} round(s)")
         yield Event(invocation_id=ctx.invocation_id, author=self.name,
                     content=types.Content(role="model", parts=[types.Part(text=text)]),
