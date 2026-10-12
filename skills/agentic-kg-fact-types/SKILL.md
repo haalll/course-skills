@@ -13,7 +13,7 @@ Status: draft on branch `draft/r10`. Checked against google-adk 1.5.0 with scrip
 3. Show the model the approved labels (instruction or getter); otherwise it invents labels.
 4. Store triples as a list, dedupe exact repeats, normalise predicates. A dict keyed by predicate overwrites.
 5. A missing approval or plan is an error that names the missing step. Never `state["x"]` (crash) or an empty default (silent).
-6. Approve takes no arguments, refuses an empty store and refuses a proposal made in the same turn.
+6. Approve takes no arguments, refuses an empty store and refuses a proposal made in the same turn, and the refusal must re-write the stored proposal in its own state change (an error that writes nothing, as the last call of a response, erases the response's earlier writes).
 
 ## Where the detail lives
 Card: `agentic-kg-construction/L09-unstructured-schema/card.md`. Code: its `reference/`.

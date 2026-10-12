@@ -1,8 +1,8 @@
 ---
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 8 of 12
 topic: schema proposal for structured data: a proposer/critic refinement loop (LoopAgent) with an escalation checker
-card_version: 2 (desktop draft v1 from the lesson transcript, checked and corrected in the lab, round 10)
-status: DRAFT, merged to main in round 11; live notes added on branch draft/r10
+card_version: 3 (round 12: checker also requires a stored plan; tests lab/stage1/r12/l12_checks.py)
+status: DRAFT, merged to main (r11, r12); checker fix on branch draft/r11
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: "scripted fake models only, no live model (lab/stage1/tests/l08_loop.py, l08_reference_check.py, round 10)"
@@ -30,7 +30,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 7. **Domain expertise in long prompt hints** [course]: node vs relationship files, "full" vs "reference" relationships, "the graph must be connected".
 8. **Loop wrapped as a tool for a coordinator** [course, run]: the loop runs in its own inner runner; the parent's state is copied in, state deltas are copied back, and the tool result is the last inner event's text (gotcha g).
 9. **Seed or reset state at the start of a run** [course, run]: the lesson seeds `feedback=""`; a `before_agent_callback` on the loop that sets it does the same and also clears a previous run's verdict (gotchas c, f).
-10. **Make the outcome explicit** [run, inference]: the checker writes `converged` (True/False) and a text event; the caller acts on that, not on whether a plan exists.
+10. **Make the outcome explicit** [run, inference]: the checker writes `converged` (True/False) and a text event; the caller acts on that. The checker approves only when the verdict is exactly `valid` AND a plan is stored (see gotcha h).
 
 ## Do / don't
 - Do make the stop test exact (the critic's whole reply is one token), not a substring.
@@ -52,6 +52,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 | e | Giving up at `max_iterations` looks like convergence | **Reproduced**: with the lesson-style checker a converged run and a gave-up run have the same state keys and the same last event (author checker, no text); the only difference is whether an escalate event exists in the event stream. A caller that only reads state or the tool result cannot tell. The fix (checker writes `converged`, plus text) separates them |
 | f | Feedback persists across runs in one session | **Reproduced**: run 2's first proposer instruction contained run 1's `revise: columns wrong`; with the reset callback it was empty |
 | g | State written inside a loop run as a tool reaches the coordinator; escalate stops the inner loop | **Reproduced, with one trap.** `AgentTool` runs the loop in a fresh inner runner seeded with a copy of the parent's state (agent_tool.py:120-124) and copies only `state_delta` back (:131-132): `nodes`, `feedback`, `converged` reached the parent; the parent's `goal` was visible inside. `escalate` ended the inner loop (1 proposer iteration of 3) and does not reach the parent's event stream; the coordinator carried on. The trap: the tool result is the last inner event's text (:135-137); the lesson-style checker's last event has none, so the coordinator got `''` in both the converged and the gave-up case. With the checker's text it got `APPROVED` / `NOT_CONVERGED after 2 round(s)` |
+| h | A critic's `valid` plus `converged=True` means a plan exists | **Reproduced on fake models, round 12 (lab/stage1/r12/out_l12_before.txt vs out_l12_after.txt).** Two `propose_node` calls in one response, the second refused: `nodes` is not stored, the critic says `valid`, the old checker gives `converged=True` and text `APPROVED`. A checker that tests the plan ends with `converged=False` and `NOT_CONVERGED after 2 round(s): critic approved but no plan is stored`; a stored plan plus `valid` still converges, `revise:` still does not. **Trap inside the fix:** reading `ctx.session.state` in the checker does NOT work: it is the live dict, and `State.__setitem__` writes it directly (state.py:44), so it still holds the writes ADK drops from the persisted delta (the first try of the fix left `converged=True`). Read the persisted copy with `ctx.session_service.get_session(...)` |
 
 Also seen: every early `escalate` printed an OpenTelemetry "Failed to detach context" traceback on stderr (13 such messages in one run of l08_loop.py, 4 in l08_reference_check.py, whose 4 approving runs stop early; the results were unaffected; cause not investigated).
 

@@ -46,6 +46,10 @@ def approve_proposed_facts(tool_context: ToolContext) -> dict:
     if not tool_context.state.get("proposed_facts"):
         return {"status": "error", "error_message": "No proposed facts are stored. Propose facts first."}
     if tool_context.state.get("proposed_in") == tool_context.invocation_id:
+        # Re-write the stored proposal in THIS call's delta: ADK keeps only the last call's delta in a response (T-020), and a refusal
+        # that writes nothing would erase what the earlier add calls of the same response stored.
+        tool_context.state["proposed_facts"] = list(tool_context.state["proposed_facts"])
+        tool_context.state["proposed_in"] = tool_context.state["proposed_in"]
         return {"status": "error", "error_message": "Facts were proposed in this same turn; the user has not seen them. Ask for confirmation first."}
     tool_context.state["approved_facts"] = list(tool_context.state["proposed_facts"])
     return {"status": "success"}

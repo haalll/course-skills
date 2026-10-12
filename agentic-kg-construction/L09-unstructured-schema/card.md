@@ -1,8 +1,8 @@
 ---
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 9 of 12
 topic: schema proposal for unstructured data: an entity-type agent, then a fact-type agent whose tool checks each triple against the approved entity types
-card_version: 2 (desktop draft v1 from the lesson transcript, checked and corrected in the lab, round 11)
-status: DRAFT, awaiting review on branch draft/r10
+card_version: 3 (round 12: refused same-turn approve keeps the proposal) / v2 (desktop draft v1 from the lesson transcript, checked and corrected in the lab, round 11)
+status: DRAFT, merged to main in round 12; gotcha g fix on branch draft/r11
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: "scripted fake models (lab/stage1/tests/l09_facts.py, l09_lastcall.py, l09_reference_check.py) plus 3 live runs of the fact agent with claude-sonnet-5-5 through ADK (lab/stage1/live/live_r11.py, round 11)"
@@ -52,7 +52,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 | d | Missing approved entity types: unclear failure | **Reproduced**: `state["approved_entities"]` raises KeyError; `.get(..., [])` refuses every triple with "Label Person doesn't exist", which blames the label; the checked tool says no approved types are in state |
 | e | Exact label match, free-text predicate, near-duplicate discovered types | **Reproduced**: `person` refused (good); the lesson-style message gives no hint, the checked one says "Did you mean 'Person'?" and lists the approved types. Predicates `HAS_ISSUE`, `has_issue`, `Has Issue` stored as 3 facts, normalised stored 1. A discovered `Products` beside well-known `Product` was accepted, the checked set tool refused it. **Not reproduced**: the retry loop the draft feared (a scripted model cannot show it; live, the refused labels were different invented ones, not the same one repeated) |
 | f | Empty or missing plan gives silent empty well-known types | **Reproduced**: plan missing or without nodes: `state[...]` raises KeyError, `.get` returns success with `types: []`, checked getter returns an error naming the missing step |
-| g | Approve copies proposed to approved with no check the user saw it | **Reproduced**: add and approve in one response: both succeed, `approved_facts` holds the triple, `proposed_facts` is gone (last delta wins). Checked approve refuses a same-turn proposal; the proposal is lost too in that case (`approved_facts=None`), so the user must start over. Propose in one turn, approve in the next: works |
+| g | Approve copies proposed to approved with no check the user saw it | **Reproduced**: add and approve in one response: both succeed, `approved_facts` holds the triple, `proposed_facts` is gone (last delta wins). Checked approve refuses a same-turn proposal. **First version of the guard lost the proposal too** (`proposed_facts=None`, user starts over): the refusal wrote nothing, and its empty delta, being the last call of the response, replaced the add call's write (T-020). **Fixed round 12 (lab/stage1/r12/out_l12_before.txt, out_l12_after.txt):** the refusal re-assigns `proposed_facts` and `proposed_in` so its own delta carries them; after the refusal the proposal is stored, `approved_facts` is still empty, and a plain `approve` in the next turn succeeds. In the old version that next approve found nothing stored. Propose in one turn, approve in the next: works |
 
 Also seen: 4 OpenTelemetry "Failed to detach context" messages in err_l09.txt (cause not investigated; results unaffected).
 

@@ -19,11 +19,16 @@ def propose_node(label: str, source_file: str, tool_context: ToolContext) -> dic
     return {"status": "success"}
 
 class Checker(BaseAgent):
-    """Escalate only on an exact approval; record the outcome in state and in a text event (so a tool caller sees it)."""
+    """Escalate only on an exact approval AND a stored plan; record the outcome in state and in a text event (so a tool caller sees it)."""
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         st = ctx.session.state; fb = st.get("feedback"); n = st.get("rounds", 0) + 1
-        ok = isinstance(fb, str) and fb.strip().lower() == APPROVE
-        text = "APPROVED" if ok else f"NOT_CONVERGED after {n} round(s)"
+        approved = isinstance(fb, str) and fb.strip().lower() == APPROVE
+        # A critic can approve while nothing was stored (refused last call, gotcha d): test the plan, not only the verdict. ctx.session.state is the LIVE
+        # dict, which still holds writes ADK later drops (State.__setitem__ writes it directly, state.py:44), so read the persisted copy from the service.
+        saved = await ctx.session_service.get_session(app_name=ctx.session.app_name, user_id=ctx.session.user_id, session_id=ctx.session.id)
+        has_plan = bool(saved and saved.state.get("nodes"))
+        ok = approved and has_plan
+        text = "APPROVED" if ok else (f"NOT_CONVERGED after {n} round(s): critic approved but no plan is stored" if approved else f"NOT_CONVERGED after {n} round(s)")
         yield Event(invocation_id=ctx.invocation_id, author=self.name,
                     content=types.Content(role="model", parts=[types.Part(text=text)]),
                     actions=EventActions(escalate=ok, state_delta={"rounds": n, "converged": ok}))
