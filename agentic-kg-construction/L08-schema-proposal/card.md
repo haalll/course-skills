@@ -2,7 +2,7 @@
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 8 of 12
 topic: schema proposal for structured data: a proposer/critic refinement loop (LoopAgent) with an escalation checker
 card_version: 5 (round 17: checker also fails a plan that cites a file outside the caller's expected set, tests lab/stage1/r17/l17_extra.py; v4, round 15: checker also requires the caller's expected files all planned, build_loop(expected_files=...); tests lab/stage1/r15/l15_complete.py. v3: stored plan, r12)
-status: DRAFT; v3 on main; v4 (completeness) on branch draft/r15
+status: DRAFT; v5 (unexpected-file check) merged to main in round 19 (draft/r16, desktop review r19); v4 merged r16
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: "scripted fake models only, no live model (lab/stage1/tests/l08_loop.py, l08_reference_check.py, round 10)"
