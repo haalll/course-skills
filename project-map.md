@@ -9,3 +9,5 @@ Candidate uses only, not decisions. Kept out of the cards (DEC-005).
 | agentic-kg-construction/L04 | Agent regression tests | Scripted multi-turn conversations as cheap tests before a long run. | untested idea |
 | agentic-kg-construction/L05 | Dux knowledge base | One router agent plus per-strategy specialists with `description`s that say what each does not handle; the final answer is read from the last final event. | untested idea |
 | agentic-kg-construction/L05 | Any multi-agent job with shared facts | Keep shared facts in a state store written via tool parameters, read with defaults; one-shot specialists get `disallow_transfer_to_parent`. | untested idea |
+| agentic-kg-construction/L06 | Hal's sniper / paper-trading stages | "Perceived plan" vs "approved plan" before any action changes state; approval tool takes no arguments; refuse approval in the turn that wrote the plan. | untested idea |
+| agentic-kg-construction/L06 | course-lab itself | The signed approval is the same pattern with the gate outside the model (STATE.md T-011). | untested idea |
