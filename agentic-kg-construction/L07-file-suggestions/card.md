@@ -38,6 +38,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 - Do validate a suggested list against the listed files before storing it.
 - Do cap lines and bytes, and say so in the docstring.
 - Do return corrective error text that names what to do next.
+- Do filter the listing with the same confinement check as the sampling tool: a real model sampled every listed file, including a listed link that pointed outside the folder (live, round 10).
 - Do keep a gate's approve out of the model response that wrote the set: refuse when `suggested_files` was written in this turn, or require two turns (L06 d; gotcha d below shows what is lost otherwise).
 - Don't let the model's memory of its own suggestion stand in for the stored value.
 - Don't treat the resolved-path check as a full sandbox: see the residual risks.
@@ -52,7 +53,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 
 ## Residual risks, not tested
 - A link swapped between the check and the open (race); hard links; a path that is allowed but sensitive. Use a dedicated read-only copy of the files or a low-privilege uid when the content matters.
-- Real model behaviour: whether a real model asks for `..` paths, skips non-structured files, or writes an invented list was not run.
+- Real model behaviour, round 10 (claude-sonnet-5-5 through ADK 1.5.0, throwaway tree, 3 runs, so observations and no rates; lab/stage1/live/out_l07-*.txt): the model never asked for `../outside_secret.txt` or an absolute path, even when the user named it (it said its tools only read inside the folder); it tried the user's unlisted `suppliers_2024.csv` once (got "does not exist") and never put an invented path in the suggestion; it did sample ALL listed files in one response, so a link inside the folder that points outside leaked its content into the context with the naive sample tool (2 of 2 naive runs, one with no user prompting) and was refused by the resolved-path check (1 of 1). The listing tool is therefore part of the attack surface. It never called approve unprompted.
 - The lesson's own tool code and notebook were not read; claim a rests on the narration as relayed by the desktop draft.
 
 ## Mapping to the Claude Agent SDK (DEC-001)
