@@ -1,8 +1,8 @@
 ---
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 7 of 12
 topic: file-suggestion agent: read the approved goal from state, inspect files with bounded tools, suggest -> approve
-card_version: 2 (desktop draft v1 from the lesson transcript, checked and corrected in the lab, round 9)
-status: DRAFT, awaiting review on branch draft/r8
+card_version: 3 (v2 round 9; round 10: pattern 5 tag and a gate rule added after review)
+status: MERGED to main in round 10 (desktop review); two review nits applied on draft/r9
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: "path, size and state checks on throwaway files and scripted fake models only, no live model (lab/stage1/tests/l07_files.py, l07_reference_check.py, round 9)"
@@ -26,7 +26,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 2. **Bounded inspection tools** [course, run]: `list_import_files` (relative paths under one import directory, also saved to state) and `sample_file` (at most ~100 lines). The model sees a capped window, never a whole file.
 3. **Confine paths to one root by resolving first** [run]. Rejecting absolute paths and checking existence is not enough: `../x`, `sub/../../x` and a symlink inside the directory that points outside all read the outside file. Resolve (`..` and links), then compare path components with `is_relative_to`; a `startswith` on the string also admits a sibling such as `import_evil` (scenario a).
 4. **Re-read your own suggestion from state before presenting it** [course]. The user approves what is stored, not what the model recalls.
-5. **Suggest -> approve pair, same shape as L06** [course, run]: `set_suggested_files(list)`, then argument-free `approve_suggested_files`, which errors if nothing is suggested.
+5. **Suggest -> approve pair, same shape as L06** [course, run]: `set_suggested_files(list)`, then argument-free `approve_suggested_files`. The set + approve pair was run (gotcha d); "approve errors if nothing is suggested" is [course] only, not run.
 6. **Validate the suggestion against the listing** [run]. Store only paths that `list_import_files` returned; the lesson skips this on purpose, and without it an invented path is stored as "suggested" (scenario b).
 7. **Cap bytes as well as lines** [run]. A 100-line cap does not bound a file with one 3 MB line (scenario c).
 8. **Domain hint in the instruction** [course]: "only structured files (CSV, JSON)".
@@ -38,6 +38,7 @@ Tags: **course** = taught in the lesson (transcript only); **run** = reproduced 
 - Do validate a suggested list against the listed files before storing it.
 - Do cap lines and bytes, and say so in the docstring.
 - Do return corrective error text that names what to do next.
+- Do keep a gate's approve out of the model response that wrote the set: refuse when `suggested_files` was written in this turn, or require two turns (L06 d; gotcha d below shows what is lost otherwise).
 - Don't let the model's memory of its own suggestion stand in for the stored value.
 - Don't treat the resolved-path check as a full sandbox: see the residual risks.
 

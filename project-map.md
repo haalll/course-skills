@@ -13,3 +13,5 @@ Candidate uses only, not decisions. Kept out of the cards (DEC-005).
 | agentic-kg-construction/L06 | course-lab itself | The signed approval is the same pattern with the gate outside the model (STATE.md T-011). | untested idea |
 | agentic-kg-construction/L07 | Dux knowledge base | An agent that proposes which `/srv/dux-kb` files feed a strategy agent, Hal approving the set; the tools only read inside one root (resolve, then compare). | untested idea |
 | agentic-kg-construction/L07 | Any file-reading tool an LLM drives (Hal's other servers) | House rule: resolve the path, compare components against the root, cap bytes; test with `..` and a symlink to a throwaway file. | untested idea |
+| agentic-kg-construction/L08 | Hal's trading-plan agents | Proposer drafts, critic checks against data, bounded loop; the stop test is an exact verdict, an empty verdict fails closed, and non-convergence goes to Hal. | untested idea |
+| agentic-kg-construction/L08 | Any critic loop (Hal's other servers) | House rule: the loop returns `converged` True/False; nothing downstream acts on a plan whose loop gave up. | untested idea |
