@@ -10,11 +10,11 @@ Layout:
 - `skills/<name>/SKILL.md`: what an agent pulls
 - `project-map.md`: where each card might apply (kept out of the cards)
 
-Status: branch `draft/r3` is a draft for review; nothing here is on main.
+Status: branches `draft/r3` and `draft/r6` (r6 includes r3) are drafts for review; nothing here is on main.
 
 ## Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j)
 - [x] L04 Intro to ADK Part I: `agentic-kg-construction/L04-adk-part-1/card.md` (DRAFT)
-- [ ] L05 Intro to ADK Part II (multi-agent, shared state)
+- [x] L05 Intro to ADK Part II: `agentic-kg-construction/L05-adk-part-2/card.md` (DRAFT)
 - [ ] L06 Understanding user intent
 - [ ] L07 File suggestions
 - [ ] L08 Schema proposal, structured

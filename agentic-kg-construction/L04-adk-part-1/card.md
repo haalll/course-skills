@@ -1,8 +1,8 @@
 ---
 course: Agentic Knowledge Graph Construction (DeepLearning.AI x Neo4j), lesson 4 of 12
 topic: one tool-using agent and its runtime in Google ADK
-card_version: 2
-status: DRAFT, awaiting review on branch draft/r3
+card_version: 3 (round 6: stop rule corrected after the L05 tests)
+status: DRAFT, awaiting review on branch draft/r6 (branched from draft/r3)
 pinned_versions: google-adk==1.5.0 (course pin; newer ADK may differ)
 verified:
   runtime: false          # nothing was executed; see gotchas below
@@ -32,24 +32,25 @@ Tags: **course** = taught in the lesson; **read** = seen in ADK 1.5.0 source; **
    names, since query parameters cannot carry those [inference].
 5. **Serialise DB results to plain data** before they enter session state [course]. The in-memory
    session service deep-copies sessions on read [read].
-6. **The runtime is an event loop** [course]. Stop on the final event *of the root agent*, not on any
-   final event (see gotcha a).
+6. **The runtime is an event loop** [course]. Read the whole `run_async` stream and take the last final
+   event. "Stop on the root's final event" is wrong once the root delegates: the turn's final event is then
+   authored by the sub-agent (see gotcha a, L05 card).
 7. **Session = (app, user, session id) + state** [course]. The in-memory service copies a state dict passed
    at creation (pydantic validation), so the caller's dict is not aliased in 1.5.0 [run].
 8. **Wrap the loop once** [course] and return a structured result (text, tool calls, author), not only
    a string [inference].
 
 ## Do / don't
-- Do stop on `event.is_final_response() and event.author == <root agent name>`.
+- Do consume the whole stream and keep the last event with `is_final_response()` true (any author). Do not require `author == <root agent name>`: in a delegating team the root never produces the final event (L05 test).
 - Do join all text parts of the final event.
 - Do pass `state=None` and build a fresh dict per session; never share a default dict.
-- Don't `break` on the first final event once sub-agents exist.
+- Don't `break` on the first final event unless you know no later final event can follow (not shown to occur with LLM transfer in 1.5.0; untested for sequential/parallel agents).
 - Don't rely on `parts[0]` alone.
 
 ## Gotchas and what is verified
 | | Claim | Static read (ADK 1.5.0) | Runtime test | Flag |
 |---|---|---|---|---|
-| a | Breaking on any final event stops on a sub-agent's reply | `is_final_response()` (events/event.py:95-104) has no author check; it is also true when `skip_summarization` or `long_running_tool_ids` is set | constructed events: naive loop stopped at the sub-agent, author check stopped at root | reproduced; course files unread |
+| a | Breaking on any final event stops on a sub-agent's reply | `is_final_response()` (events/event.py:95-104) has no author check; it is also true when `skip_summarization` or `long_running_tool_ids` is set | constructed events: naive loop stopped at the sub-agent, author check stopped at root. CORRECTION r6: with real delegation (L05 scenario 1, fake model) the root emits no final event at all, so the author check would return nothing | reproduced; "author check" fix REPLACED by "take the last final event"; course files unread |
 | b | `get_session` must be awaited | `async def` at sessions/base_session_service.py:72; the runner awaits it at runners.py:181 and :296 | without `await`: `AttributeError: 'coroutine' object has no attribute 'events'`; with `await`: a Session | reproduced; the course helper's code is unseen |
 | c | Mutable `{}` default shared across calls | in-memory service stores `state or {}` (sessions/in_memory_session_service.py:96) | NOT reproduced: with an empty or non-empty shared dict, sessions got separate state objects and writes did not leak | not a gotcha for in-memory 1.5.0; other session services untested; still avoid shared defaults |
 | d | Only `parts[0].text` is read | nothing in `is_final_response()` limits parts | constructed two-part final event: `parts[0].text` gave 'Hello ', joined text gave 'Hello world' | reproduced on a constructed event; no live model call |

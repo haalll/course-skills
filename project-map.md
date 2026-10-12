@@ -7,3 +7,5 @@ Candidate uses only, not decisions. Kept out of the cards (DEC-005).
 | agentic-kg-construction/L04 | Dux knowledge base | Read-only KB tool with the status/error envelope over `/srv/dux-kb`, one agent per strategy. Target the quant DB and trade summaries first; the playbook file is out of scope (DEC-003). | untested idea |
 | agentic-kg-construction/L04 | Any tool an LLM fills in (wallet-intel, bscguard SQL/DuckDB lookups) | House rule: parameterised queries plus the envelope. | untested idea |
 | agentic-kg-construction/L04 | Agent regression tests | Scripted multi-turn conversations as cheap tests before a long run. | untested idea |
+| agentic-kg-construction/L05 | Dux knowledge base | One router agent plus per-strategy specialists with `description`s that say what each does not handle; the final answer is read from the last final event. | untested idea |
+| agentic-kg-construction/L05 | Any multi-agent job with shared facts | Keep shared facts in a state store written via tool parameters, read with defaults; one-shot specialists get `disallow_transfer_to_parent`. | untested idea |
